@@ -39,7 +39,13 @@ python3 scraper/dtek_scraper.py --city "м. Дніпро" --street "вул. Пр
 
 ### 2. Картка
 
-**Через HACS:** ⋮ → *Custom repositories* → додати URL цього репозиторію
+**Через Marketplace** (HA 2026.11+, HACS тепер частина core):
+*Settings → Marketplace* → **Add from link** → `myk0la-b/ha-dtek-outage-card`.
+Потрібне підключення GitHub (device sign-in; читає лише публічну інформацію).
+
+[![Відкрити репозиторій у Marketplace](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=myk0la-b&repository=ha-dtek-outage-card&category=plugin)
+
+**На старіших HA — через HACS:** ⋮ → *Custom repositories* → додати URL цього репозиторію
 (тип *Frontend*) → встановити «DTEK Outage Card».
 
 **Вручну:** покласти `dtek-outage-card.js` у `<config>/www/`, потім
@@ -107,7 +113,13 @@ File-free alternative — push straight into HA via `POST /api/states/sensor.dte
 (long-lived access token from your HA profile): `--push-url` + `--push-token`, example in
 `docs/HA_SETUP.md`.
 
-**2. Card.** Via HACS: ⋮ → *Custom repositories* → add this repository URL (type
+**2. Card.** Via **Marketplace** (HA 2026.11+, HACS is now part of core):
+*Settings → Marketplace* → **Add from link** → `myk0la-b/ha-dtek-outage-card`.
+Requires a GitHub connection (device sign-in; reads public information only).
+
+[![Open this repository in the Marketplace](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=myk0la-b&repository=ha-dtek-outage-card&category=plugin)
+
+On older HA — via **HACS**: ⋮ → *Custom repositories* → add this repository URL (type
 *Frontend*) → install «DTEK Outage Card». Manually: copy `dtek-outage-card.js` to
 `<config>/www/`, then *Settings → Dashboards → Resources → Add* →
 `/local/dtek-outage-card.js`, type *JavaScript module*.
