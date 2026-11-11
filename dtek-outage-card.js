@@ -1,6 +1,6 @@
 /**
- * DTEK Outage Card — lovelace custom card for sensor.dtek_outage
- * (state pushed by scraper/dtek_scraper.py from dtek-dnem.com.ua).
+ * DTEK Outage Card — lovelace custom card (fetch-first: читає state.json,
+ * який пише scraper/dtek_scraper.py з сайтів обленерго родини ДТЕК).
  *
  * No build step, no dependencies. Register as a module resource:
  *   /local/dtek-outage-card.js
@@ -49,7 +49,7 @@ class DtekOutageCard extends HTMLElement {
     this._config = {
       fetch_url: "/local/dtek_outage/state.json",
       refresh_minutes: 10,
-      title: "ДТЕК · відключення",
+      title: null, // за замовчуванням — "ДТЕК · <регіон>" з даних скрапера
       ...(config || {}),
     };
   }
@@ -89,6 +89,12 @@ class DtekOutageCard extends HTMLElement {
 
   getCardSize() {
     return 5;
+  }
+
+  _title() {
+    if (this._config.title) return this._config.title;
+    const region = this._data && this._data.provider && this._data.provider.region;
+    return region ? `ДТЕК · ${region}` : "ДТЕК · відключення";
   }
 
   render() {
@@ -138,7 +144,7 @@ class DtekOutageCard extends HTMLElement {
     if (this._config.entity) {
       const st = this._hass.states[this._config.entity];
       if (!st) {
-        card.appendChild(h("div", { class: "title" }, this._config.title));
+        card.appendChild(h("div", { class: "title" }, this._title()));
         card.appendChild(h("div", { class: "sub" }, `Сенсор ${this._config.entity} не знайдений`));
         return;
       }
@@ -146,7 +152,7 @@ class DtekOutageCard extends HTMLElement {
     } else if (this._data) {
       a = this._data;
     } else {
-      card.appendChild(h("div", { class: "title" }, this._config.title));
+      card.appendChild(h("div", { class: "title" }, this._title()));
       card.appendChild(h("div", { class: "sub" },
         this._fetchError ? `Помилка завантаження: ${this._fetchError}` : "Завантаження даних…"));
       return;
@@ -156,7 +162,7 @@ class DtekOutageCard extends HTMLElement {
     const stateKey = ["on", "off", "maybe"].includes(cur.state) ? cur.state : "unknown";
 
     card.appendChild(h("div", { class: "head" },
-      h("div", { class: "title" }, this._config.title),
+      h("div", { class: "title" }, this._title()),
       h("div", { class: "queue" }, [addr.group_name || "", addr.house ? " · " + addr.house : ""].join(""))));
 
     const label = { on: "Світло є", off: "Відключено", maybe: "Можливе відключення", unknown: "Немає даних" }[stateKey];
@@ -216,5 +222,5 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "dtek-outage-card",
   name: "DTEK Outage Card",
-  description: "Графік відключень ДТЕК Дніпровські електромережі + новини",
+  description: "Графік відключень обленерго родини ДТЕК (Дніпро/Київ/Київщина/Донеччина/Одещина) + новини",
 });

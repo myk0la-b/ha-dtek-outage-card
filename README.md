@@ -2,17 +2,25 @@
 
 [English below](#english)
 
-Картка Lovelace + скрапер офіційного сайту [ДТЕК Дніпрообленерго](https://www.dtek-dnem.com.ua/ua/shutdowns):
+Картка Lovelace + скрапер офіційних сайтів **п'яти обленерго родини ДТЕК** (одна платформа):
 поточний статус світла по **вашій адресі**, графік погодинних відключень на день,
 екстрені банери й новини. Без хмари, без сторонніх сервісів, без API-ключів —
 все локально.
+
+| `--provider` | Обленерго | Регіон |
+|---|---|---|
+| `dnipro` (типово) | ДТЕК Дніпровські електромережі | Дніпропетровська обл. |
+| `kyiv` | ДТЕК Київські електромережі | м. Київ |
+| `kyiv-obl` | ДТЕК Київські регіональні електромережі | Київська обл. |
+| `donetsk` | ДТЕК Донецькі електромережі | Донецька обл. |
+| `odesa` | ДТЕК Одеські електромережі | Одеська обл. |
 
 ![Попередній перегляд](docs/screenshot.png)
 
 ## Як це працює
 
 ```
-dtek-dnem.com.ua ──(скрапер, cron/systemd кожні 10 хв)──▶ /www/dtek_outage/state.json ──▶ картка
+сайт обленерго ДТЕК ──(скрапер, cron/systemd кожні 10 хв)──▶ /www/dtek_outage/state.json ──▶ картка
 ```
 
 - `scraper/dtek_scraper.py` — чистий Python (`curl_cffi`), тягне статус по адресі з офіційного сайту.
@@ -26,13 +34,20 @@ dtek-dnem.com.ua ──(скрапер, cron/systemd кожні 10 хв)──�
 
 ```bash
 pip install curl_cffi
-python3 scraper/dtek_scraper.py --city "м. Дніпро" --street "вул. Прикладова" --house "10" \
+# точні назви пункту/вулиці/будинку — з довідника самого сайту:
+python3 scraper/dtek_scraper.py --provider kyiv --list-cities
+python3 scraper/dtek_scraper.py --provider kyiv --streets-for "м. Бориспіль"
+python3 scraper/dtek_scraper.py --provider kyiv --homes-for "м. Бориспіль" "вул. Головатого"
+# запуск (для Дніпра --city можна не вказувати):
+python3 scraper/dtek_scraper.py --provider dnipro --street "вул. Прикладова" --house "10" \
     --out /srv/homeassistant/config/www/dtek_outage/state.json
 ```
 
-Адресу варто взяти з підказок самого сайту (сторінка «Графік відключень»): скрапер
-свірить вуличний довідник і шукає точний ключ будинку. Для автозапуску кожні 10 хв —
+Назви населених пунктів специфічні для кожного провайдера — `--list-cities` показує саме той
+довідник, з яким працює скрапер. Для автозапуску кожні 10 хв —
 `deploy/dtek-scraper.service` + `.timer` (systemd) або звичайний cron.
+Куки-файл опційний і тепер свій для кожного провайдера (`cookies.<provider>.json`);
+без нього сесія самовідновлюється через challenge→retry.
 
 Альтернатива без файлу — push у `POST /api/states/sensor.dtek_outage` (токен довгого
 життя з профілю HA): прапорець `--push-url` + `--push-token`, приклад у `docs/HA_SETUP.md`.
@@ -59,7 +74,7 @@ type: custom:dtek-outage-card
 # fetch_url: /local/dtek_outage/state.json   # за замовчуванням
 # refresh_minutes: 10
 # entity: sensor.dtek_outage                 # читати з HA-сенсора замість fetch
-# title: ДТЕК · відключення
+# title: ...                                 # за замовчуванням — "ДТЕК · <регіон>" з даних
 ```
 
 Повний шлях налаштування (sensor, автоматизації «світло зникло → повідомлення»,
@@ -67,23 +82,24 @@ type: custom:dtek-outage-card
 
 ## Обмеження
 
-- Графік і статус доступні лише для клієнтів **ДТЕК Дніпрообленерго** (мережа Дніпра;
-  для інших обленерго треба адаптувати скрапер — структура `state.json` навмисно проста).
+- Підтримуються п'ять обленерго родини ДТЕК (таблиця на початку) — одна платформа, той самий
+  API. Інші обленерго (Львів, Запоріжжя, Миколаїв, Вінниця, …) працюють на інших рушіях:
+  адаптери для них у планах, структура `state.json` навмисно проста й від це не змінить.
 - Сторінки сайту під Incapsula: якщо ДТЕК посилить захист, скрапер впаде з
   зрозумілою помилкою `[blocked]` — чекайте оновлення тут.
 - Це неофіційний скрапер: не чиніть навантаження на сайт (таймер ≥ 10 хв).
 
 ## English
 
-Lovelace card + scraper for the official [DTEK Dniprooblenergo](https://www.dtek-dnem.com.ua/ua/shutdowns)
-outage site: current power status for **your address**, the hourly shutdown schedule for
-the day, emergency banners and news. No cloud, no third-party services, no API keys —
-everything stays local.
+Lovelace card + scraper for the official outage sites of the **five DTEK-family oblenergos**
+(one shared platform — see the provider table above): current power status for **your
+address**, the hourly shutdown schedule for the day, emergency banners and news. No cloud,
+no third-party services, no API keys — everything stays local.
 
 ### How it works
 
 ```
-dtek-dnem.com.ua ──(scraper, cron/systemd every 10 min)──▶ /www/dtek_outage/state.json ──▶ card
+DTEK oblenergo site ──(scraper, cron/systemd every 10 min)──▶ /www/dtek_outage/state.json ──▶ card
 ```
 
 - `scraper/dtek_scraper.py` — plain Python (single dependency: `curl_cffi`), pulls the
@@ -101,13 +117,20 @@ dtek-dnem.com.ua ──(scraper, cron/systemd every 10 min)──▶ /www/dtek_o
 
 ```bash
 pip install curl_cffi
-python3 scraper/dtek_scraper.py --city "м. Дніпро" --street "вул. Прикладова" --house "10" \
+# exact settlement/street/house spellings come from the site's own directory:
+python3 scraper/dtek_scraper.py --provider kyiv --list-cities
+python3 scraper/dtek_scraper.py --provider kyiv --streets-for "м. Бориспіль"
+python3 scraper/dtek_scraper.py --provider kyiv --homes-for "м. Бориспіль" "вул. Головатого"
+# run (for dnipro, --city can be omitted):
+python3 scraper/dtek_scraper.py --provider dnipro --street "вул. Прикладова" --house "10" \
     --out /srv/homeassistant/config/www/dtek_outage/state.json
 ```
 
-Take the street/house spelling from the site's own autocomplete (Shutdown schedule page) —
-the scraper matches the exact house key from the site's street directory. For unattended
-runs every 10 minutes: `deploy/dtek-scraper.service` + `.timer` (systemd) or plain cron.
+Settlement names are provider-specific — `--list-cities` prints exactly the directory the
+scraper matches against. For unattended runs every 10 minutes:
+`deploy/dtek-scraper.service` + `.timer` (systemd) or plain cron.
+The cookie file is optional and now per-provider (`cookies.<provider>.json`); without it the
+session self-heals via challenge→retry.
 
 File-free alternative — push straight into HA via `POST /api/states/sensor.dtek_outage`
 (long-lived access token from your HA profile): `--push-url` + `--push-token`, example in
@@ -132,7 +155,7 @@ type: custom:dtek-outage-card
 # fetch_url: /local/dtek_outage/state.json   # default
 # refresh_minutes: 10
 # entity: sensor.dtek_outage                 # read from an HA sensor instead of fetching
-# title: ДТЕК · відключення
+# title: ...                                 # default: "ДТЕК · <region>" from the data
 ```
 
 Full setup path (REST sensor, "power went out → push notification" automations, filing
@@ -140,9 +163,9 @@ a request to the utility's IT unit via `getCekText`) — [docs/HA_SETUP.md](docs
 
 ### Limitations
 
-- Schedules and status exist only for **DTEK Dniprooblenergo** customers (Dnipro grid).
-  Other oblenergos require adapting the scraper — the `state.json` schema is
-  deliberately simple and reusable.
+- Supported: the five DTEK-family oblenergos (table at the top) — one platform, same API.
+  Other oblenergos (Lviv, Zaporizhzhia, Mykolaiv, Vinnytsia, …) run different engines;
+  adapters are on the roadmap and the deliberately simple `state.json` schema won't change.
 - The site sits behind Incapsula: if DTEK hardens protection, the scraper will fail with
   a clear `[blocked]` error — an update will appear here.
 - Unofficial scraper: be polite to the site (interval ≥ 10 minutes).

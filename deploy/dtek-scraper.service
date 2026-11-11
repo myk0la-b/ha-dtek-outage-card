@@ -1,13 +1,14 @@
 [Unit]
-Description=DTEK outage scraper (dtek-dnem.com.ua -> HA www state.json)
+Description=DTEK outage scraper (oblenergo site -> HA www state.json)
 Wants=network-online.target
 After=network-online.target
 
 [Service]
 Type=oneshot
 WorkingDirectory=/srv/dtek-outage
+# адресу та провайдера вказати свої (див. --list-cities/--streets-for/--homes-for)
 ExecStart=/srv/dtek-outage/venv/bin/python /srv/dtek-outage/dtek_scraper.py \
-  --cookies /srv/dtek-outage/cookies.dtek.json \
+  --provider dnipro --street "вул. Прикладова" --house "10" \
   --out /srv/homeassistant/config/www/dtek_outage/state.json
 # код 2 = куки Incapsula протерміновані — див. README (Cookie refresh)
 SuccessExitStatus=0 2

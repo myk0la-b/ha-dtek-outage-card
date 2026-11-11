@@ -49,7 +49,7 @@ sensor:
 Створити Long-Lived Access Token: HA → профіль → Long-lived access tokens, і в scraper:
 
 ```bash
-python3 dtek_scraper.py --push-url http://http://<HA_HOST>:8123lt;HA_HOSThttp://<HA_HOST>:8123gt;:8123 --push-token <TOKEN> --entity sensor.dtek_outage
+python3 dtek_scraper.py --provider dnipro --push-url http://<HA_HOST>:8123 --push-token <TOKEN> --entity sensor.dtek_outage
 ```
 
 Сенсор тоді створюється напряму (REST API `POST /api/states/sensor.dtek_outage`) і не потребує YAML —
