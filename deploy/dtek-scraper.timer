@@ -1,0 +1,11 @@
+[Unit]
+Description=Run DTEK outage scraper every 10 minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=10min
+RandomizedDelaySec=60
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

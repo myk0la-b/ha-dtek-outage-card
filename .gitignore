@@ -1,0 +1,5 @@
+out/
+__pycache__/
+*.log
+.DS_Store
+cookies.dtek.json

@@ -1,0 +1,15 @@
+[Unit]
+Description=DTEK outage scraper (dtek-dnem.com.ua -> HA www state.json)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/srv/dtek-outage
+ExecStart=/srv/dtek-outage/venv/bin/python /srv/dtek-outage/dtek_scraper.py \
+  --cookies /srv/dtek-outage/cookies.dtek.json \
+  --out /srv/homeassistant/config/www/dtek_outage/state.json
+# код 2 = куки Incapsula протерміновані — див. README (Cookie refresh)
+SuccessExitStatus=0 2
+StandardOutput=append:/var/log/dtek-scraper.log
+StandardError=append:/var/log/dtek-scraper.log
